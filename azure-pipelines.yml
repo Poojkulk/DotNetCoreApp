@@ -7,11 +7,107 @@ trigger:
 - master
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: 'vs2017-win2016'
 
 variables:
   buildConfiguration: 'Release'
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
 
 steps:
 - script: dotnet build --configuration $(buildConfiguration)
   displayName: 'dotnet build $(buildConfiguration)'
+
+- task: SonarQubePrepare@4
+  inputs:
+    SonarQube: 'sonar'
+    scannerMode: 'MSBuild'
+    projectKey: 'sonar'
+    projectName: 'sonar'
+    extraProperties: 'sonar.cs.vscoveragexml.reportpaths=**/*.coveragexml'
+
+
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: 'dotnet-restore'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: '$(solution)'
+    arguments: '--configuration($buildconfiguration)'
+
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'test'
+    projects: '$(solution)'
+    arguments: '--collect:"Code-Coverage"'
+
+
+- task: VSTest@2
+  inputs:
+    testSelector: 'testAssemblies'
+    testAssemblyVer2: |
+      **\*test*.dll
+      !**\*TestAdapter.dll
+      !**\obj\**
+    searchFolder: '$(System.DefaultWorkingDirectory)'
+    resultsFolder: '$(Common.TestResultDirectory)'
+    publishRunAttachments: true
+  continueOnError: false
+
+- task: SonarQubeAnalyze@4
+  displayName: sonar qude analaysis
+
+- task: sonar-buildbreaker@8
+  displayName: Sonar Build /Pipeline Breaker
+  inputs:
+    SonarQube: 'sonar'
+
+
+- task: InstallFortifySCA@5
+  inputs:
+    InstallerPath: 'c:\-agent-distr\'
+    VS2013: false
+    VS2015: false
+    VS2017: true
+    LicenseFile: 'c:\-agent-distr\fortify.license'
+    RunFortifyRulepackUpdate: false
+  enabled: False
+
+- task: PowerShell@2
+  inputs:
+    filePath: '''Write-Host "##vso[task.prependpath]c:\HPE_Fortify\HPE_Fortify_SCA_and_Apps\bin\"'''
+  enabled: False
+
+- task: BatchScript@1
+  inputs: 
+    filename: '''C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\Tools\VsDevCmd.bat'''
+    modifyEnvironment: true
+  enabled: false
+
+- task: FortifySCA@5
+  inputs:
+    runBuildTranslate: true
+    applicationType: 'dotnet'
+    fortifyProjects: 'mySqlDotnetCore.sln'
+    fortifyBuildId: '1.0'
+    runFortifyRulepackUpdate: true
+    runFortifyClean: true
+    scaVerbose: true
+    scaDebug: true
+    runFortifyScan: true
+    fortifyScanType: 'LocalScan'
+    runFortifyUpload: true
+    fortifyServerName: 'Micro-focus-Fority'
+    fortifyApplicationName: 'DevSecOps'
+    fortifyApplicationVersion: '1.0'
+  enabled: false
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
