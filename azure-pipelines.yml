@@ -55,7 +55,8 @@ steps:
       !**\obj\**
     searchFolder: '$(System.DefaultWorkingDirectory)'
     resultsFolder: '$(Common.TestResultDirectory)'
-    publishRunAttachments: true
+    platform: '$(Buildform)'
+    configuration: '$(BuildConfiguration)'
   continueOnError: false
 
 - task: SonarQubeAnalyze@4
@@ -75,12 +76,12 @@ steps:
     VS2017: true
     LicenseFile: 'c:\-agent-distr\fortify.license'
     RunFortifyRulepackUpdate: false
-  enabled: False
+    ProxyHost:  
 
 - task: PowerShell@2
   inputs:
     filePath: '''Write-Host "##vso[task.prependpath]c:\HPE_Fortify\HPE_Fortify_SCA_and_Apps\bin\"'''
-  enabled: False
+
 
 - task: BatchScript@1
   inputs: 
@@ -93,6 +94,7 @@ steps:
     runBuildTranslate: true
     applicationType: 'dotnet'
     fortifyProjects: 'mySqlDotnetCore.sln'
+    buildAnalyzerParams: '-dotnet-core-version-2.1 -libdirs D:/a/1/s'
     fortifyBuildId: '1.0'
     runFortifyRulepackUpdate: true
     runFortifyClean: true
