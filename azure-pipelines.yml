@@ -20,10 +20,6 @@ steps:
 
 
 
-- task: PowerShell@2
-  inputs:
-    targetType: 'inline'
-    script: 'dotnet-restore'
 
 - task: DotNetCoreCLI@2
   inputs:
