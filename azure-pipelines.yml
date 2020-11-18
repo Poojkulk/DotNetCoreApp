@@ -18,13 +18,6 @@ steps:
 - script: dotnet build --configuration $(buildConfiguration)
   displayName: 'dotnet build $(buildConfiguration)'
 
-- task: SonarQubePrepare@4
-  inputs:
-    SonarQube: 'sonar'
-    scannerMode: 'MSBuild'
-    projectKey: 'sonar'
-    projectName: 'sonar'
-    extraProperties: 'sonar.cs.vscoveragexml.reportpaths=**/*.coveragexml'
 
 
 - task: PowerShell@2
@@ -59,28 +52,7 @@ steps:
     configuration: '$(BuildConfiguration)'
   continueOnError: false
 
-- task: SonarQubeAnalyze@4
-  displayName: sonar qude analaysis
 
-- task: sonar-buildbreaker@8
-  displayName: Sonar Build /Pipeline Breaker
-  inputs:
-    SonarQube: 'sonar'
-
-
-- task: InstallFortifySCA@5
-  inputs:
-    InstallerPath: 'c:\-agent-distr\'
-    VS2013: false
-    VS2015: false
-    VS2017: true
-    LicenseFile: 'c:\-agent-distr\fortify.license'
-    RunFortifyRulepackUpdate: false
-    ProxyHost:  
-
-- task: PowerShell@2
-  inputs:
-    filePath: '''Write-Host "##vso[task.prependpath]c:\HPE_Fortify\HPE_Fortify_SCA_and_Apps\bin\"'''
 
 
 - task: BatchScript@1
@@ -89,27 +61,4 @@ steps:
     modifyEnvironment: true
   enabled: false
 
-- task: FortifySCA@5
-  inputs:
-    runBuildTranslate: true
-    applicationType: 'dotnet'
-    fortifyProjects: 'mySqlDotnetCore.sln'
-    buildAnalyzerParams: '-dotnet-core-version-2.1 -libdirs D:/a/1/s'
-    fortifyBuildId: '1.0'
-    runFortifyRulepackUpdate: true
-    runFortifyClean: true
-    scaVerbose: true
-    scaDebug: true
-    runFortifyScan: true
-    fortifyScanType: 'LocalScan'
-    runFortifyUpload: true
-    fortifyServerName: 'Micro-focus-Fority'
-    fortifyApplicationName: 'DevSecOps'
-    fortifyApplicationVersion: '1.0'
-  enabled: false
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'drop'
-    publishLocation: 'Container'
