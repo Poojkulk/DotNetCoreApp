@@ -30,9 +30,52 @@ steps:
     solution: '**\*.sln'
 
 - task: DotNetCoreCLI@2
-  inputs:
-    command: 'build'
+  displayName: 'dotnet build'
 
-- task: DotNetCoreCLI@2
+
+- task: VSBuild@1
+  displayName: 'Build solution'
   inputs:
-    command: 'test'
+    solution: '$(Parameters.solution)'
+    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactstagingdirectory)\\"'
+    platform: '$(BuildPlatform)'
+    configuration: '$(BuildConfiguration)'
+
+
+
+- task: VSTest@2
+  displayName: 'Test Assemblies'
+  inputs:
+    testAssemblyVer2: |
+     **\$(BuildConfiguration)\*test*.dll
+     !**\obj\**
+    platform: '$(BuildPlatform)'
+    configuration: '$(BuildConfiguration)'
+
+
+- task: PublishSymbols@2
+  displayName: 'Publish symbols path'
+  inputs:
+    SearchPattern: '**\bin\**\*.pdb'
+    PublishSymbols: false
+  continueOnError: true
+
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)'
+    ArtifactName: '$(Parameters.ArtifactName)'
+  condition: succeededOrFailed()
+
+- task: ArchiveFiles@2
+  displayName: 'Archive $(Build.BinariesDirectory)'
+
+
+
+- task: AzureRmWebAppDeployment@4
+  displayName: 'Azure App Service Deploy: netapps'
+  inputs:
+    azureSubscription: 'Free Trial (de41a4b5-07b4-4eff-ba63-33c5643b5f9a)'
+    WebAppName: netapps
+    packageForLinux: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
