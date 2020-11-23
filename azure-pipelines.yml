@@ -6,32 +6,110 @@
 trigger:
 - master
 
-pool:
-  vmImage: 'vs2017-win2016'
+# pool:
+#   vmImage: 'vs2017-win2016'
 
-variables:
-  buildConfiguration: 'Release'
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
+# variables:
+#   buildConfiguration: 'Release'
+#   solution: '**/*.sln'
+#   buildPlatform: 'Any CPU'
+
+# steps:
+# - script: dotnet build --configuration $(buildConfiguration)
+#   displayName: 'dotnet build $(buildConfiguration)'
+
+
+# - task: BatchScript@1
+#   inputs: 
+#     filename: '''C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\Tools\VsDevCmd.bat'''
+#     modifyEnvironment: true
+#   enabled: false
+
+# - task: VSBuild@1
+#   inputs:
+#     solution: '**\*.sln'
+
+# - task: DotNetCoreCLI@2
+#   displayName: 'dotnet build'
+
+
+# - task: VSBuild@1
+#   displayName: 'Build solution'
+#   inputs:
+#     solution: '$(Parameters.solution)'
+#     msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactstagingdirectory)\\"'
+#     platform: '$(BuildPlatform)'
+#     configuration: '$(BuildConfiguration)'
+
+
+
+# - task: VSTest@2
+#   displayName: 'Test Assemblies'
+#   inputs:
+#     testAssemblyVer2: |
+#      **\$(BuildConfiguration)\*test*.dll
+#      !**\obj\**
+#     platform: '$(BuildPlatform)'
+#     configuration: '$(BuildConfiguration)'
+
+
+# - task: PublishSymbols@2
+#   displayName: 'Publish symbols path'
+#   inputs:
+#     SearchPattern: '**\bin\**\*.pdb'
+#     PublishSymbols: false
+#   continueOnError: true
+
+
+# - task: PublishBuildArtifacts@1
+#   displayName: 'Publish Artifact'
+#   inputs:
+#     PathtoPublish: '$(build.artifactstagingdirectory)'
+#     ArtifactName: '$(Parameters.ArtifactName)'
+#   condition: succeededOrFailed()
+
+# - task: ArchiveFiles@2
+#   displayName: 'Archive $(Build.BinariesDirectory)'
+
+
+
+# - task: AzureRmWebAppDeployment@4
+#   displayName: 'Azure App Service Deploy: netapps'
+#   inputs:
+#     azureSubscription: 'Free Trial (de41a4b5-07b4-4eff-ba63-33c5643b5f9a)'
+#     WebAppName: netapps
+#     packageForLinux: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+
+
+pool:
+  name: Azure Pipelines
+  demands:
+  - msbuild
+  - visualstudio
+  - vstest
+
+#Your build pipeline references an undefined variable named ‘Parameters.solution’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab. See https://go.microsoft.com/fwlink/?linkid=865972
+#Your build pipeline references an undefined variable named ‘Parameters.solution’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab. See https://go.microsoft.com/fwlink/?linkid=865972
+#Your build pipeline references the ‘BuildPlatform’ variable, which you’ve selected to be settable at queue time. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it settable at queue time. See https://go.microsoft.com/fwlink/?linkid=865971
+#Your build pipeline references the ‘BuildConfiguration’ variable, which you’ve selected to be settable at queue time. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it settable at queue time. See https://go.microsoft.com/fwlink/?linkid=865971
+#Your build pipeline references the ‘BuildConfiguration’ variable, which you’ve selected to be settable at queue time. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it settable at queue time. See https://go.microsoft.com/fwlink/?linkid=865971
+#Your build pipeline references the ‘BuildPlatform’ variable, which you’ve selected to be settable at queue time. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it settable at queue time. See https://go.microsoft.com/fwlink/?linkid=865971
+#Your build pipeline references the ‘BuildConfiguration’ variable, which you’ve selected to be settable at queue time. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it settable at queue time. See https://go.microsoft.com/fwlink/?linkid=865971
+#Your build pipeline references an undefined variable named ‘Parameters.ArtifactName’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab. See https://go.microsoft.com/fwlink/?linkid=865972
 
 steps:
-- script: dotnet build --configuration $(buildConfiguration)
-  displayName: 'dotnet build $(buildConfiguration)'
-
-
-- task: BatchScript@1
-  inputs: 
-    filename: '''C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\Tools\VsDevCmd.bat'''
-    modifyEnvironment: true
-  enabled: false
-
-- task: VSBuild@1
+- task: NuGetToolInstaller@0
+  displayName: 'Use NuGet 4.4.1'
   inputs:
-    solution: '**\*.sln'
+    versionSpec: 4.4.1
+
+- task: NuGetCommand@2
+  displayName: 'NuGet restore'
+  inputs:
+    restoreSolution: '$(Parameters.solution)'
 
 - task: DotNetCoreCLI@2
   displayName: 'dotnet build'
-
 
 - task: VSBuild@1
   displayName: 'Build solution'
@@ -40,8 +118,6 @@ steps:
     msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactstagingdirectory)\\"'
     platform: '$(BuildPlatform)'
     configuration: '$(BuildConfiguration)'
-
-
 
 - task: VSTest@2
   displayName: 'Test Assemblies'
@@ -52,14 +128,12 @@ steps:
     platform: '$(BuildPlatform)'
     configuration: '$(BuildConfiguration)'
 
-
 - task: PublishSymbols@2
   displayName: 'Publish symbols path'
   inputs:
     SearchPattern: '**\bin\**\*.pdb'
     PublishSymbols: false
   continueOnError: true
-
 
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact'
@@ -71,11 +145,10 @@ steps:
 - task: ArchiveFiles@2
   displayName: 'Archive $(Build.BinariesDirectory)'
 
-
-
 - task: AzureRmWebAppDeployment@4
   displayName: 'Azure App Service Deploy: netapps'
   inputs:
     azureSubscription: 'Free Trial (de41a4b5-07b4-4eff-ba63-33c5643b5f9a)'
     WebAppName: netapps
     packageForLinux: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+
