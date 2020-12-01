@@ -72,4 +72,7 @@ steps:
   inputs:
     azureSubscription: 'Free Trial (de41a4b5-07b4-4eff-ba63-33c5643b5f9a)'
     WebAppName: netapps
+    deployToSlotOrASE: true
+    ResourceGroupName: APP
     packageForLinux: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+
